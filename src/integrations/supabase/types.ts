@@ -24,6 +24,7 @@ export type Database = {
           receipt: Json | null
           receipt_meta: Json | null
           status: string
+          user_id: string | null
           tickets: number[]
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           receipt?: Json | null
           receipt_meta?: Json | null
           status?: string
+          user_id?: string | null
           tickets: number[]
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           receipt?: Json | null
           receipt_meta?: Json | null
           status?: string
+          user_id?: string | null
           tickets?: number[]
         }
         Relationships: []
@@ -55,7 +58,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_raffle_admin: { Args: Record<string, never>; Returns: boolean };
+      get_taken_tickets: { Args: Record<string, never>; Returns: { ticket: number }[] };
     }
     Enums: {
       [_ in never]: never
