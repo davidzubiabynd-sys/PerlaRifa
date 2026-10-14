@@ -62,6 +62,7 @@ let hydrated = false;
 let hydrationPromise: Promise<void> | null = null;
 let realtimeBound = false;
 let cacheUserId: string | null = null;
+let cacheEpoch = 0;
 let publicTakenTickets = new Set<number>();
 const LEGACY_MIGRATION_FLAG = "rifa.reservations.supabase-migrated.v2";
 
@@ -155,15 +156,9 @@ function bindRealtime() {
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "reservations" },
-      (payload) => {
-        if (payload.eventType === "DELETE") {
-          const old = payload.old as { id?: string } | null;
-          if (old?.id) cache.delete(old.id);
-        } else {
-          const row = payload.new as Row;
-          if (row?.id) upsert(rowToReservation(row));
-        }
-        emit();
+      () => {
+        // Fetch through current RLS instead of caching a delayed previous-session event.
+        void refreshReservations().catch(() => {});
       },
     )
     .subscribe();
@@ -173,7 +168,9 @@ async function hydrate(): Promise<void> {
   if (hydrated) return;
   if (hydrationPromise) return hydrationPromise;
   hydrationPromise = (async () => {
+    const epoch = cacheEpoch;
     const userId = await ensureParticipantSession();
+    if (cacheEpoch !== epoch) throw new Error("La sesión cambió; vuelve a consultar tus apartados.");
     if (cacheUserId !== userId) { cache.clear(); publicTakenTickets.clear(); cacheUserId = userId; }
     const { data: taken, error: takenError } = await supabase.rpc("get_taken_tickets");
     if (takenError) throw takenError;
@@ -188,6 +185,7 @@ async function hydrate(): Promise<void> {
       hydrationPromise = null;
       throw error;
     }
+    if (cacheEpoch !== epoch || cacheUserId !== userId) throw new Error("La sesión cambió; vuelve a consultar tus apartados.");
     if ((data?.length ?? 0) >= RESERVATIONS_FETCH_LIMIT) {
       console.warn("[reservations] fetch reached row limit; increase RESERVATIONS_FETCH_LIMIT.");
     }
@@ -387,6 +385,7 @@ export async function getReservationReceipt(id: string): Promise<ReservationRece
 
 /** Clears private cached data when changing administrator/participant sessions. */
 export function clearReservationCache() {
+  cacheEpoch += 1;
   cache.clear(); publicTakenTickets.clear(); cacheUserId = null;
   hydrated = false; hydrationPromise = null;
 }
