@@ -122,7 +122,7 @@ export const BadgeCanvas = ({
       >
         Ya puse mi granito de arena en apoyo a{" "}
         <span style={{ fontWeight: 800, color: "oklch(0.78 0.13 75)" }}>Perla Madrigal</span> y estoy participando por{" "}
-        <span style={{ fontWeight: 800 }}>tablet Acer A11</span>.
+        <span style={{ fontWeight: 800 }}>tablet Acer Iconia Tab A11</span>.
       </p>
     </div>
 

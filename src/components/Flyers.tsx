@@ -42,6 +42,7 @@ export function FlyersPanel() {
       <div ref={winner ? winnerRef : generalRef} style={{ width: 1080, height: 1920, padding: "100px 90px", boxSizing: "border-box", background: "linear-gradient(160deg, #0b3a2e, #246650)", color: "white", fontFamily: "Poppins, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 40 }}>
         <p style={{ fontSize: 28, letterSpacing: 5, color: "#efd083" }}>RIFA DE PERLA MADRIGAL</p>
         <h2 style={{ fontSize: 80, lineHeight: 1.1, fontWeight: 800 }}>{winner ? "¡Felicidades!" : "Gana una tablet"}</h2>
+        {!winner && <p style={{ fontSize: 30 }}>En apoyo a los gastos hospitalarios de Perla</p>}
         <p style={{ fontSize: 48, color: "#efd083", fontWeight: 700 }}>{RAFFLE.prize}</p>
         <img src={RAFFLE.prizeImage} alt={RAFFLE.prize} style={{ height: 740, width: 700, objectFit: "contain", background: "white", borderRadius: 40, padding: 20 }} />
         {winner ? <>
@@ -50,9 +51,9 @@ export function FlyersPanel() {
         </> : <>
           <p style={{ fontSize: 52, fontWeight: 800 }}>200 boletos · 001 al 200</p>
           <p style={{ fontSize: 42 }}>{PRICE_LABEL}</p>
-          <p style={{ fontSize: 36 }}>Fecha del sorteo por confirmar</p>
+          <p style={{ fontSize: 36 }}>Ganador al vender los 200 boletos</p>
         </>}
-        <p style={{ marginTop: "auto", fontSize: 27 }}>{RAFFLE.publicUrl || "Enlace de participación por confirmar"}</p>
+        <p style={{ marginTop: "auto", fontSize: 27 }}>{RAFFLE.publicUrl || "WhatsApp: 662 290 5054"}</p>
       </div>
     );
   }
@@ -60,7 +61,7 @@ export function FlyersPanel() {
   return (
     <section className="mt-8 rounded-2xl border border-border bg-card p-5">
       <h2 className="text-lg font-extrabold">Flyers descargables</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Historias de 1080 × 1920 para compartir o descargar. No incluyen premios adicionales sin confirmar.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Historias de 1080 × 1920 para compartir o descargar. Solo se rifa la tablet Acer Iconia Tab A11.</p>
       <div className="mt-5 grid gap-6 sm:grid-cols-2">
         <div>
           <h3 className="mb-3 font-bold">Invitación a la rifa</h3>
