@@ -10,7 +10,7 @@ Incluye selección de boletos, apartados, verificador con comprobantes, panel ad
 - Enlace público donde se desplegará la rifa.
 - Capacidad y condiciones de entrega de la tablet.
 - Reglas del sorteo: método para elegir al ganador y qué ocurre si no se completan las ventas.
-- Proyecto independiente de Supabase y acceso administrativo seguro.
+- Completar el despliegue en Supabase y Vercel siguiendo `DEPLOYMENT.md`.
 
 ## Contacto y pago
 
@@ -32,6 +32,6 @@ Instala con `bun install` y ejecuta `bun run dev`; para compilar usa `bun run bu
 
 El código exportado de Lovable incluye administración de apartados, comprobantes, estados de pago, notas, liberación de boletos, búsqueda y panel de sorteos. Esta copia conserva esas funciones y ajusta el sorteo a una sola tablet y 200 boletos. Los flyers del ganador se completan con el resultado confirmado, no con nombres precargados.
 
-Antes de recibir datos reales, sustituye el control administrativo en navegador por autenticación en servidor y configura políticas RLS que protejan nombres, teléfonos y comprobantes. Las políticas públicas heredadas de la plantilla y `VITE_DEMO_ADMIN_PASSWORD` no son protección suficiente para producción. La clave `SUPABASE_SERVICE_ROLE_KEY` debe permanecer únicamente en el servidor.
+El acceso administrativo usa Supabase Auth con correo y contraseña. La base comprueba el rol administrativo en cada operación; no hay contraseña administrativa dentro del navegador. Los participantes consultan solamente sus propios apartados y comprobantes. La disponibilidad pública devuelve únicamente números de boletos ocupados.
 
-Crear este repositorio desde la plantilla no lo conecta automáticamente a Lovable, Supabase ni a un sitio publicado.
+Las migraciones de seguridad deben estar aplicadas antes de abrir apartados. Para el despliegue, creación del administrador y variables de entorno consulta `DEPLOYMENT.md`.
