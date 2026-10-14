@@ -16,7 +16,6 @@ import {
 } from "@/lib/reservations";
 import { FlyersPanel } from "@/components/Flyers";
 import { DrawPanel } from "@/components/DrawPanel";
-import { getGoldenTicket, isGoldenTicket } from "@/lib/goldenTickets";
 
 // Contraseña simple para acceso interno. Cambiar aquí cuando se necesite.
 const ADMIN_PASSWORD = import.meta.env.VITE_DEMO_ADMIN_PASSWORD ?? "";
@@ -523,14 +522,9 @@ function Row({
   const isPaid = r.status === "paid";
   const isFrozen = r.status === "frozen";
   const expired = !isFrozen && !r.receipt && left !== null && left <= 0;
-  const goldenHits = r.tickets.map(getGoldenTicket).filter((g): g is NonNullable<typeof g> => !!g);
-  const hasGolden = goldenHits.length > 0;
-
-  const rowStyle: React.CSSProperties = hasGolden
-    ? { background: "color-mix(in oklab, #fbbf24 18%, white)", borderLeft: "4px solid #a16207" }
-    : isFrozen
-      ? { background: "color-mix(in oklab, #f59e0b 12%, white)" }
-      : {};
+  const rowStyle: React.CSSProperties = isFrozen
+    ? { background: "color-mix(in oklab, #f59e0b 12%, white)" }
+    : {};
 
   return (
     <tr className="align-top" style={rowStyle}>
@@ -539,19 +533,6 @@ function Row({
         <p className="text-[11px] text-muted-foreground">
           {new Date(r.createdAt).toLocaleString("es-MX")}
         </p>
-        {hasGolden && (
-          <div className="mt-2 space-y-1">
-            {goldenHits.map((g) => (
-              <p
-                key={g.number}
-                className="inline-block rounded-md px-2 py-1 text-[11px] font-bold"
-                style={{ background: "#a16207", color: "white" }}
-              >
-                🏆 GANADOR {pad(g.number)} · {g.prize} — {g.sponsor}
-              </p>
-            ))}
-          </div>
-        )}
         {r.note && (
           <p
             className="mt-1.5 inline-block max-w-[220px] rounded-md px-2 py-1 text-[11px] font-medium"
@@ -565,18 +546,15 @@ function Row({
       <td className="px-4 py-4">
         <div className="flex flex-wrap gap-1">
           {r.tickets.map((n) => {
-            const gold = isGoldenTicket(n);
             return (
               <span
                 key={n}
-                title={gold ? "🏆 Boleto de Oro ganador" : undefined}
                 className="rounded-md px-2 py-0.5 text-[11px] font-bold tabular-nums text-white"
                 style={{
-                  background: gold ? "#a16207" : isFrozen ? "#f59e0b" : "var(--emerald)",
-                  boxShadow: gold ? "0 0 0 2px #fbbf24" : undefined,
+                  background: isFrozen ? "#f59e0b" : "var(--emerald)",
                 }}
               >
-                {gold ? "★ " : ""}{pad(n)}
+                {pad(n)}
               </span>
             );
           })}

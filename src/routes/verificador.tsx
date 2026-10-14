@@ -1,3 +1,4 @@
+import { PaymentHelp } from "@/components/PaymentHelp";
 import { RAFFLE, amountLabel } from "@/lib/raffle";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -281,6 +282,7 @@ function ReservationCard({
           </>
         )}
         <BankDetailsInline />
+        <PaymentHelp />
         <p className="text-center text-xs font-semibold tabular-nums">
           {isPaid || hasReceipt ? (
             <span className="text-muted-foreground">Tiempo restante: —</span>
@@ -324,7 +326,8 @@ function BankDetailsInline() {
         Datos de pago
       </p>
       <dl className="mt-3 grid gap-2 text-sm">
-        <CopyableInlineDatum label="CLABE" value={account.clabe ?? ""} mono />
+        {account.clabe && <CopyableInlineDatum label="CLABE" value={account.clabe} mono />}
+        {account.card && <CopyableInlineDatum label="Tarjeta" value={account.card} mono />}
         <CopyableInlineDatum label="Beneficiario" value={account.holder} />
         <InlineDatum label="Institución" value={account.bank} />
       </dl>
@@ -540,6 +543,7 @@ function PaymentModal({
               </p>
             </div>
 
+            <PaymentHelp />
             <div className="mt-6">
               <label
                 className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-5 py-8 text-center transition-colors ${

@@ -1,3 +1,5 @@
+import { PaymentHelp } from "@/components/PaymentHelp";
+import { BANK_ACCOUNTS } from "@/lib/banks";
 import { RAFFLE, PRICE_LABEL, amountLabel } from "@/lib/raffle";
 import { Heart } from "lucide-react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
@@ -20,6 +22,7 @@ const TOTAL = RAFFLE.totalTickets;
 const PRICE = RAFFLE.ticketPrice ?? 0;
 const WHATSAPP = RAFFLE.whatsapp;
 const WEBHOOK_URL = (import.meta as any).env?.VITE_WEBHOOK_URL ?? "";
+const BACKEND_CONFIGURED = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
 const RAFFLE_DATE = RAFFLE.drawDate ? new Date(RAFFLE.drawDate) : null;
 
 function pad(n: number) {
@@ -251,7 +254,7 @@ function Index() {
                 <span className="text-white/90">200 boletos disponibles</span>
               </h1>
               <p className="mt-5 max-w-xl text-base font-medium text-white/85 sm:text-lg">
-                Participa por una tablet Acer A11 como la de la imagen. Fecha y precio por confirmar.
+                Participa por una tablet Acer Iconia Tab A11 y apoya los gastos hospitalarios de Perla. Cada boleto cuesta $100 MXN.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -307,7 +310,7 @@ function Index() {
           {/* Countdown */}
           <div className="mt-10 rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur md:p-6">
             <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-              {RAFFLE_DATE ? "⏳ Cuenta regresiva para el sorteo" : "📅 Fecha del sorteo pendiente"}
+              {RAFFLE_DATE ? "⏳ Cuenta regresiva para el sorteo" : "🎟️ El ganador se anunciará al vender todos los boletos"}
             </p>
             {RAFFLE_DATE && <div className="grid grid-cols-4 gap-2 sm:gap-4">
               {[
@@ -329,7 +332,7 @@ function Index() {
                 </div>
               ))}
             </div>}
-            {!RAFFLE_DATE && <p className="text-center text-sm text-white/80">Anunciaremos la fecha y hora cuando estén confirmadas.</p>}
+            {!RAFFLE_DATE && <p className="text-center text-sm text-white/80">{RAFFLE.announcement}</p>}
           </div>
         </div>
       </header>
@@ -338,7 +341,7 @@ function Index() {
       <SocialProof />
 
       {/* ===== BOLETOS DE ORO ===== */}
-      {/* Los premios instantáneos se activarán únicamente si se confirman. */}
+
 
       {/* ===== CÓMO FUNCIONA ===== */}
       <section className="px-5 py-14 md:py-20" style={{ background: "var(--cream)" }}>
@@ -401,10 +404,10 @@ function Index() {
           El motivo
         </p>
         <h2 className="text-2xl font-bold text-emerald-deep sm:text-4xl">
-          La causa de esta rifa
+          Gastos hospitalarios de Perla
         </h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Rifa organizada en nombre de Perla Madrigal. El premio es una tablet Acer A11 como la referencia mostrada. Los detalles del sorteo y su fecha se anunciarán al confirmarse.
+          Esta rifa es para apoyar los gastos hospitalarios de Perla Madrigal. Participa con un boleto de $100 MXN por una tablet Acer Iconia Tab A11. En cuanto se vendan los 200 boletos se anunciará al ganador.
         </p>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
           Agradecemos infinitamente tu empatía y apoyo al sumarte a esta causa.
@@ -422,10 +425,10 @@ function Index() {
           </h2>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2">
-            <InfoCard label="🏆 Premio" value={RAFFLE.prize} sub="Como la imagen de referencia; especificaciones por confirmar" highlight />
+            <InfoCard label="🏆 Premio" value={RAFFLE.prize} sub="Acer Iconia Tab A11 · como la imagen de referencia" highlight />
             <InfoCard label="🎟️ Boletos disponibles" value="200 boletos" sub="Numeración del 001 al 200" />
-            <InfoCard label="📅 Fecha del sorteo" value="Por confirmar" sub="Fecha y hora pendientes" />
-            <InfoCard label="⏰ Cierre de ventas" value="Por confirmar" sub="Se anunciará junto con las condiciones del sorteo" />
+            <InfoCard label="🏆 Anuncio del ganador" value="Al vender los 200 boletos" sub="Se anunciará en cuanto se vendan todos" />
+            <InfoCard label="🎟️ Precio por boleto" value={PRICE_LABEL} sub="Del 001 al 200" />
           </div>
 
           <div
@@ -436,9 +439,20 @@ function Index() {
               color: "var(--emerald-deep)",
             }}
           >
-            Fecha, precio y condiciones del sorteo pendientes de confirmación.
+            {RAFFLE.announcement}
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-5 py-10">
+        <h2 className="text-2xl font-bold text-emerald-deep">Datos de pago</h2>
+        {BANK_ACCOUNTS.map(bank => <div key={bank.bank} className="mt-4 rounded-2xl border border-border bg-card p-5">
+          <p className="font-bold">{bank.bank}</p>
+          <p className="mt-2">Titular: {bank.holder}</p>
+          <p className="mt-2 font-mono">Tarjeta: {bank.card}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Concepto: tu nombre completo. Después de apartar, sube tu comprobante en el verificador.</p>
+        </div>)}
+        <PaymentHelp />
       </section>
 
       {/* ===== BOLETOS ===== */}
@@ -477,15 +491,17 @@ function Index() {
           />
         </div>
 
-        {RAFFLE.ticketPrice === null && <p className="mt-5 rounded-xl border border-border bg-card p-4 text-sm">Los 200 boletos se muestran como referencia. Los apartados abrirán al confirmar el precio y conectar la base de datos.</p>}
+        {!BACKEND_CONFIGURED && <p className="mt-5 rounded-xl border border-border bg-card p-4 text-sm">Los apartados en línea se habilitarán próximamente. Para participar ahora, manda un mensaje por WhatsApp.</p>}
+
+        {!BACKEND_CONFIGURED && <PaymentHelp />}
 
         {/* Scrollable, uniform grid. auto-fill ensures buttons never get cut. */}
         <div
           className="relative mt-6 max-h-[60vh] overflow-y-auto overscroll-contain rounded-3xl border border-border bg-card p-3 shadow-[var(--shadow-card)] sm:p-5"
           style={{ WebkitOverflowScrolling: "touch" }}
-          aria-busy={!ready && RAFFLE.ticketPrice !== null}
+          aria-busy={!ready && BACKEND_CONFIGURED}
         >
-          {!ready && RAFFLE.ticketPrice !== null && (
+          {!ready && BACKEND_CONFIGURED && (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-card/85 backdrop-blur-sm">
               <div className="flex items-center gap-3 rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-emerald shadow-[var(--shadow-soft)]">
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-emerald border-t-transparent" />
@@ -577,7 +593,7 @@ function Index() {
           <div className="grid gap-10 md:grid-cols-2">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold">
-                200 BOLETOS · TABLET ACER A11
+                200 BOLETOS · ACER ICONIA TAB A11
               </p>
               <h3 className="mt-5 text-2xl font-bold leading-tight sm:text-3xl">
                 Gracias por participar en la rifa de Perla Madrigal.
@@ -598,7 +614,7 @@ function Index() {
                   rel="noreferrer"
                   className="text-white/80 underline-offset-4 hover:underline"
                 >
-                  Instagram por confirmar
+                  
                 </a>
               </div>
               <div>
@@ -614,7 +630,7 @@ function Index() {
                   rel="noreferrer"
                   className="mt-1.5 inline-block text-base font-bold text-white underline-offset-4 hover:underline"
                 >
-                  WhatsApp por confirmar
+                  662 290 5054
                 </a>
               </div>
             </div>
@@ -765,7 +781,7 @@ function FormPanel(props: {
             className="w-full rounded-full py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-[1.01] active:scale-95 disabled:opacity-60"
             style={{ background: "var(--emerald)" }}
           >
-            {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : "💚 Apartar mis boletos"}
+            {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !BACKEND_CONFIGURED ? "Apartados aún no habilitados" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : "💚 Apartar mis boletos"}
           </button>
           <p className="rounded-xl border border-amber-300/50 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-900">
             ⏱ Los boletos apartados se liberarán automáticamente si no se registra el pago en un límite de 12 horas.
@@ -863,7 +879,7 @@ function MobileStickyForm(props: React.ComponentProps<typeof FormPanel>) {
               className="w-full rounded-full py-4 text-base font-bold text-white shadow-[var(--shadow-soft)] active:scale-95 disabled:opacity-50"
               style={{ background: "var(--emerald)" }}
             >
-              {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : `💚 Apartar ${selected.size > 0 ? `${selected.size} boletos` : "boletos"}`}
+              {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !BACKEND_CONFIGURED ? "Apartados aún no habilitados" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : `💚 Apartar ${selected.size > 0 ? `${selected.size} boletos` : "boletos"}`}
             </button>
             <p className="rounded-xl border border-amber-300/50 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-900">
               ⏱ Se liberarán si no registras el pago en 12 horas.
