@@ -1,3 +1,4 @@
+import { RAFFLE } from "@/lib/raffle";
 import { useEffect, useMemo, useState } from "react";
 import { getAllReservations, refreshReservations, type Reservation } from "@/lib/reservations";
 
@@ -11,48 +12,7 @@ type Prize = {
   emoji: string;
 };
 
-const PRIZES: Prize[] = [
-  {
-    id: "burrititos-cena",
-    name: "Cena para 2 · 2 Burros Medianos",
-    sponsor: "Patrocinador B",
-    tier: "small",
-    emoji: "🌯",
-  },
-  {
-    id: "mini-pancakes",
-    name: "Charola de 12 mini pancakes",
-    sponsor: "Patrocinador E",
-    tier: "small",
-    emoji: "🥞",
-  },
-  {
-    id: "deedee-ensalada",
-    name: "Ensalada chica",
-    sponsor: "Patrocinador F",
-    tier: "small",
-    emoji: "🥗",
-  },
-  {
-    id: "vegana-entrada",
-    name: "Entrada + 1 platillo",
-    sponsor: "Patrocinador G",
-    tier: "small",
-    emoji: "🌱",
-  },
-  {
-    id: "echo-show",
-    name: "Amazon Echo Show",
-    tier: "big",
-    emoji: "🎁",
-  },
-  {
-    id: "grand-prize",
-    name: "$7,000 MXN en efectivo",
-    tier: "big",
-    emoji: "🏆",
-  },
-];
+const PRIZES: Prize[] = [{ id: "tablet-acer-a11", name: RAFFLE.prize, tier: "big", emoji: "🏆" }];
 
 type Winner = {
   prizeId: string;
@@ -127,11 +87,11 @@ export function DrawPanel() {
         for (const t of r.tickets) entries.push({ ticket: t, reservation: r });
       }
     } else {
-      // Pool de prueba: 1-1000 simulado.
-      for (let i = 1; i <= 1000; i++) entries.push({ ticket: i, reservation: null });
+      // Pool de prueba: 1-200 simulado.
+      for (let i = 1; i <= RAFFLE.totalTickets; i++) entries.push({ ticket: i, reservation: null });
     }
 
-    return entries.filter((e) => !wonTickets.has(e.ticket));
+    return entries.filter((e) => e.ticket >= 1 && e.ticket <= RAFFLE.totalTickets && !wonTickets.has(e.ticket));
   }, [reservations, winners, mode, testPool]);
 
   const nextPrize = PRIZES.find((p) => !winners.some((w) => w.prizeId === p.id));
@@ -236,7 +196,7 @@ export function DrawPanel() {
               Pool: apartados actuales
             </SubButton>
             <SubButton active={testPool === "todos"} onClick={() => setTestPool("todos")}>
-              Pool: 001–1000 simulado
+              Pool: 001–200 simulado
             </SubButton>
           </div>
         )}

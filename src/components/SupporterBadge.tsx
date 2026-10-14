@@ -71,7 +71,7 @@ export const BadgeCanvas = ({
             background: "oklch(0.78 0.13 75)",
           }}
         />
-        RIFA SOLIDARIA · 2026
+        RIFA DE PERLA MADRIGAL · 2026
       </div>
 
       <p
@@ -121,9 +121,8 @@ export const BadgeCanvas = ({
         }}
       >
         Ya puse mi granito de arena en apoyo a{" "}
-        <span style={{ fontWeight: 800, color: "oklch(0.78 0.13 75)" }}>Persona beneficiaria</span> y estoy participando por{" "}
-        <span style={{ fontWeight: 800 }}>$7,000 MXN</span> o una{" "}
-        <span style={{ fontWeight: 800 }}>Amazon Echo Show</span>.
+        <span style={{ fontWeight: 800, color: "oklch(0.78 0.13 75)" }}>Perla Madrigal</span> y estoy participando por{" "}
+        <span style={{ fontWeight: 800 }}>tablet Acer A11</span>.
       </p>
     </div>
 
@@ -201,7 +200,7 @@ export const BadgeCanvas = ({
         }}
       >
         <span>RIFA-PARA-YOLANDA.LOVABLE.APP</span>
-        <span style={{ color: "oklch(0.78 0.13 75)" }}>@DAVIDZUBIAA</span>
+        <span style={{ color: "oklch(0.78 0.13 75)" }}>PERLA MADRIGAL</span>
       </div>
     </div>
   </div>
