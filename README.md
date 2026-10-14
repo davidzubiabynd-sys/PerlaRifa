@@ -1,44 +1,34 @@
-# Plantilla de rifas
+# Rifa de Perla Madrigal
 
-Base React + TanStack Start + Supabase, preparada a partir del proyecto de Lovable. Incluye selección de boletos, apartados, comprobantes, panel administrativo, sorteos y flyers.
+Rifa de una tablet Acer A11 como la imagen de referencia, con **200 boletos numerados del 001 al 200**. No se han confirmado las especificaciones exactas del equipo.
 
-## Crear una rifa nueva
+Incluye selección de boletos, apartados, verificador con comprobantes, panel administrativo en `/admin-rifa`, sorteo de la tablet y flyers descargables de invitación y ganador. Los premios instantáneos de la plantilla permanecen desactivados porque no se han confirmado premios adicionales.
 
-1. En GitHub pulsa **Use this template → Create a new repository**. Cada rifa debe tener su propio repositorio.
-2. Crea un proyecto nuevo de Supabase. No reutilices la base de otra rifa: mezclarías participantes, pagos y boletos.
-3. Copia `.env.example` a `.env` y configura las variables de tu proyecto. Nunca subas `.env` ni claves de servicio.
-4. Aplica las migraciones de `supabase/migrations` en orden a esa base nueva.
-5. Personaliza los archivos indicados abajo y añade tus imágenes en `public/`.
-6. Instala las dependencias con Bun (`bun install`) y ejecuta `bun run dev`. Para compilar: `bun run build`.
+## Datos pendientes
 
-## Dónde personalizar
+- Precio de cada boleto en MXN.
+- Fecha y hora del sorteo, zona horaria y cierre de ventas.
+- Teléfono/WhatsApp e Instagram de contacto.
+- Banco, titular y CLABE/cuenta para pagos.
+- Enlace público donde se desplegará la rifa.
+- Confirmación del modelo Acer A11, capacidad y condiciones de entrega de la tablet.
+- Motivo de la rifa y reglas: cómo se elige al ganador y qué ocurre si no se venden todos los boletos.
+- Proyecto independiente de Supabase y acceso administrativo seguro.
 
-| Contenido | Archivo |
-| --- | --- |
-| Persona, causa, premios, fecha, cantidad de boletos y precio | `src/routes/index.tsx` |
-| Banco, titular, CLABE y contacto de pagos | `src/lib/banks.ts` |
-| Fotos y logos | `public/` y las URL en `src/assets/*.asset.json` |
-| Premios instantáneos y patrocinadores | `src/lib/goldenTickets.ts` y `src/routes/index.tsx` |
-| Flyers, premios y enlaces impresos | `src/components/Flyers.tsx` |
-| Premios del sorteo | `src/components/DrawPanel.tsx` |
-| Tarjeta para compartir | `src/components/SupporterBadge.tsx` |
-| Título y metadatos para redes | `src/routes/__root.tsx` |
-| Verificador y panel administrativo | `src/routes/verificador.tsx`, `src/routes/admin-rifa.tsx` |
+El precio permanece vacío y los apartados se habilitan al confirmarlo. La fecha no muestra una cuenta regresiva ficticia. No hay cuentas bancarias ni destinos de contacto de ejemplo activos.
 
-Los premios y las fechas conservados son ejemplos. Algunos precios y premios se repiten en flyers, verificador y panel administrativo: actualízalos de manera consistente antes de publicar. Los teléfonos y cuentas con ceros son marcadores que debes reemplazar.
+## Configuración
 
-## Limpieza realizada
+Los datos principales están en `src/lib/raffle.ts`. Los pagos se configuran en `src/lib/banks.ts`. La imagen proporcionada está en `public/tablet-acer-a11.png`.
 
-Se retiraron la configuración real de Supabase, contraseña administrativa original, teléfono, cuenta bancaria, identidad e historia médica, imágenes y enlaces del proyecto original y destino del webhook. No se incluyen registros de participantes, pagos ni comprobantes: el archivo exportado contiene código y esquema, no la base de datos.
+Copia `.env.example` a `.env`, configura un proyecto NUEVO de Supabase y aplica las migraciones en orden. La última restringe la numeración a 001–200 y rechaza duplicados. No reutilices la base de la rifa original. Nunca publiques `.env` ni claves de servicio.
 
-Las imágenes de Lovable solo venían como referencias a su almacenamiento; se sustituyeron por un SVG local de ejemplo para que la plantilla sea independiente.
+Instala con `bun install` y ejecuta `bun run dev`; para compilar usa `bun run build`. También puede usarse npm. Para publicar debes configurar el hosting y las variables de entorno del proyecto.
 
-## Antes de aceptar datos reales
+## Administración
 
-El proyecto original permite operaciones públicas sobre `reservations` en sus políticas de Supabase, y su acceso administrativo se valida en el navegador. Esa contraseña NO protege la base de datos. Esta plantilla es una base de desarrollo: implementa autenticación administrativa en servidor, autorización mediante RLS y endpoints públicos limitados antes de usar nombres, teléfonos o comprobantes reales. `VITE_DEMO_ADMIN_PASSWORD` solo sirve para pruebas y está vacío por defecto.
+El código exportado de Lovable incluye administración de apartados, comprobantes, estados de pago, notas, liberación de boletos, búsqueda y panel de sorteos. Esta copia conserva esas funciones y ajusta el sorteo a una sola tablet y 200 boletos. Los flyers del ganador se completan con el resultado confirmado, no con nombres precargados.
 
-Configura los webhooks únicamente con destinos propios autorizados; vacíos no envían datos. Mantén `SUPABASE_SERVICE_ROLE_KEY` exclusivamente en el servidor.
+Antes de recibir datos reales, sustituye el control administrativo en navegador por autenticación en servidor y configura políticas RLS que protejan nombres, teléfonos y comprobantes. Las políticas públicas heredadas de la plantilla y `VITE_DEMO_ADMIN_PASSWORD` no son protección suficiente para producción. La clave `SUPABASE_SERVICE_ROLE_KEY` debe permanecer únicamente en el servidor.
 
-## Lovable
-
-Crear un repositorio desde esta plantilla copia archivos, no la base de datos ni la conexión del proyecto original de Lovable. Cada instancia necesita su propia configuración y despliegue. El ZIP entregado se descomprime antes de subir: GitHub no descomprime archivos ZIP dentro de un repositorio.
+Crear este repositorio desde la plantilla no lo conecta automáticamente a Lovable, Supabase ni a un sitio publicado.
