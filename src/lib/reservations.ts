@@ -1,3 +1,4 @@
+import { RAFFLE } from "@/lib/raffle";
 // Apartados persistidos directamente en la base de datos con sincronización en vivo.
 // La caché en memoria solo refleja la base y se rehidrata antes de escribir.
 
@@ -78,14 +79,14 @@ function parseTickets(value: unknown): number[] {
   if (Array.isArray(value)) {
     return value
       .map((n) => Number(n))
-      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 1000)
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= RAFFLE.totalTickets)
       .sort((a, b) => a - b);
   }
   if (typeof value === "string") {
     return value
       .split(/[^0-9]+/)
       .map((n) => Number(n))
-      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 1000)
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= RAFFLE.totalTickets)
       .sort((a, b) => a - b);
   }
   return [];
@@ -321,6 +322,10 @@ export async function addReservation(input: {
   phone: string;
   tickets: number[];
 }): Promise<Reservation> {
+  if (RAFFLE.ticketPrice === null) throw new Error("El precio del boleto está pendiente.");
+  if (!input.tickets.length || input.tickets.some(n => !Number.isInteger(n) || n < 1 || n > RAFFLE.totalTickets) || new Set(input.tickets).size !== input.tickets.length) {
+    throw new Error("Los boletos deben ser únicos y estar entre 001 y 200.");
+  }
   const tickets = [...input.tickets].sort((a, b) => a - b);
   await refreshReservations();
   const conflict = tickets.find((ticket) => getTakenTickets().has(ticket));

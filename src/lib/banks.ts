@@ -8,17 +8,11 @@ export type BankAccount = {
   concept?: string;
 };
 
-export const BANK_ACCOUNTS: BankAccount[] = [
-  {
-    bank: "Mercado Pago W",
-    holder: "Titular de ejemplo",
-    clabe: "000000000000000000",
-    concept: "Tu nombre completo",
-  },
-];
+// Agrega una cuenta solo cuando Perla confirme sus datos de pago.
+export const BANK_ACCOUNTS: BankAccount[] = [];
 
 export const PAYMENT_CONTACT = {
-  name: "Organizador de ejemplo",
-  whatsapp: "0000000000000",
-  display: "Configura tu teléfono",
+  name: "Perla Madrigal",
+  whatsapp: "",
+  display: "Contacto por confirmar",
 };
