@@ -1,0 +1,83 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Poppins", system-ui, sans-serif;
+  --font-sans: "Poppins", system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-emerald: var(--emerald);
+  --color-emerald-deep: var(--emerald-deep);
+  --color-gold: var(--gold);
+  --color-cream: var(--cream);
+  --color-taken: var(--taken);
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: oklch(0.985 0.012 95);
+  --foreground: oklch(0.18 0.025 160);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.025 160);
+  --primary: oklch(0.52 0.14 162);
+  --primary-foreground: oklch(0.99 0.01 95);
+  --secondary: oklch(0.94 0.02 95);
+  --secondary-foreground: oklch(0.22 0.03 160);
+  --muted: oklch(0.95 0.012 95);
+  --muted-foreground: oklch(0.48 0.02 160);
+  --accent: oklch(0.78 0.13 75);
+  --accent-foreground: oklch(0.2 0.03 160);
+  --border: oklch(0.9 0.015 95);
+  --input: oklch(0.92 0.015 95);
+  --ring: oklch(0.52 0.14 162);
+
+  --emerald: oklch(0.58 0.16 162);
+  --emerald-deep: oklch(0.34 0.09 162);
+  --gold: oklch(0.78 0.13 75);
+  --cream: oklch(0.97 0.018 90);
+  --taken: oklch(0.38 0.01 160);
+
+  --gradient-hero: linear-gradient(135deg, oklch(0.34 0.09 162) 0%, oklch(0.45 0.12 165) 60%, oklch(0.52 0.14 162) 100%);
+  --shadow-soft: 0 10px 30px -12px color-mix(in oklab, var(--emerald-deep) 25%, transparent);
+  --shadow-card: 0 4px 24px -8px color-mix(in oklab, var(--emerald-deep) 15%, transparent);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html { font-family: var(--font-sans); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.025em; font-weight: 700; }
+
+  @keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--gold) 60%, transparent); }
+    70% { box-shadow: 0 0 0 18px color-mix(in oklab, var(--gold) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--gold) 0%, transparent); }
+  }
+  .pulse-cta { animation: pulseRing 2s infinite; }
+}
