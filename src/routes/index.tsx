@@ -338,7 +338,7 @@ function Index() {
       </header>
 
       {/* ===== SOCIAL PROOF ===== */}
-      <SocialProof />
+      {/* Participant names stay private. */}
 
       {/* ===== BOLETOS DE ORO ===== */}
 

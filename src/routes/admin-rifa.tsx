@@ -1,7 +1,10 @@
+import { supabase } from "@/integrations/supabase/client";
+import { isAdministrator } from "@/lib/auth";
 import { RAFFLE, amountLabel } from "@/lib/raffle";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  clearReservationCache,
   getAllReservations,
   setStatus,
   freezeReservation,
@@ -17,9 +20,6 @@ import {
 import { FlyersPanel } from "@/components/Flyers";
 import { DrawPanel } from "@/components/DrawPanel";
 
-// Contraseña simple para acceso interno. Cambiar aquí cuando se necesite.
-const ADMIN_PASSWORD = import.meta.env.VITE_DEMO_ADMIN_PASSWORD ?? "";
-const AUTH_KEY = "rifa.admin.auth.v1";
 
 export const Route = createFileRoute("/admin-rifa")({
   head: () => ({
@@ -37,30 +37,38 @@ function pad(n: number) {
 
 function AdminRifa() {
   const [authed, setAuthed] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(true);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (ADMIN_PASSWORD && window.sessionStorage.getItem(AUTH_KEY) === "1") setAuthed(true);
+    let cancelled = false;
+    void isAdministrator().then(value => { if (!cancelled) setAuthed(value); })
+      .catch(() => { if (!cancelled) setAuthed(false); })
+      .finally(() => { if (!cancelled) setChecking(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  function onLogin(e: React.FormEvent) {
-    e.preventDefault();
-    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-      window.sessionStorage.setItem(AUTH_KEY, "1");
-      setAuthed(true);
-      setError(null);
-    } else {
-      setError("Contraseña incorrecta.");
-    }
+  async function onLogin(e: React.FormEvent) {
+    e.preventDefault(); setLoggingIn(true); setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error || !(await isAdministrator())) {
+        await supabase.auth.signOut();
+        throw new Error("Correo o contraseña incorrectos, o sin acceso administrativo.");
+      }
+      clearReservationCache(); setPassword(""); setAuthed(true);
+    } catch (error) { setError(error instanceof Error ? error.message : "No se pudo iniciar sesión."); }
+    finally { setLoggingIn(false); }
   }
 
-  function logout() {
-    window.sessionStorage.removeItem(AUTH_KEY);
-    setAuthed(false);
-    setPassword("");
+  async function logout() {
+    await supabase.auth.signOut(); clearReservationCache(); setAuthed(false); setPassword("");
   }
+
+  if (checking) return <p className="p-8 text-center">Verificando acceso…</p>;
 
   if (!authed) {
     return (
@@ -74,13 +82,19 @@ function AdminRifa() {
           </p>
           <h1 className="mt-1 text-2xl font-extrabold text-emerald-deep">Admin Rifa</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ingresa la contraseña para administrar los apartados.
+            Ingresa con tu correo y contraseña para administrar la rifa.
           </p>
+          <label className="mt-5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Correo electrónico
+          </label>
+          <input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-3" />
           <label className="mt-5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Contraseña
           </label>
           <input
             type="password"
+            autoComplete="current-password"
+            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoFocus
@@ -91,10 +105,11 @@ function AdminRifa() {
           )}
           <button
             type="submit"
+            disabled={loggingIn}
             className="mt-4 w-full rounded-full px-6 py-3 text-sm font-bold text-white shadow-[var(--shadow-soft)] active:scale-95"
             style={{ background: "var(--emerald)" }}
           >
-            Entrar
+            {loggingIn ? "Verificando…" : "Entrar"}
           </button>
           <Link
             to="/"

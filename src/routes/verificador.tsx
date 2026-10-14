@@ -131,7 +131,7 @@ function Verificador() {
         <div className="mb-6">
           <StepBadge step={3} text="Haz la transferencia en tu banco u OXXO y sube tu comprobante aquí" />
           <p className="mt-2 text-sm text-muted-foreground">
-            Ingresa tu celular, revisa el total de tus boletos y adjunta el comprobante. Así podremos confirmar tu participación y activar tu insignia VERIFIED SUPPORTER.
+            Desde el mismo navegador donde apartaste, ingresa tu celular, revisa el total y adjunta el comprobante. Así podremos confirmar tu participación y activar tu insignia VERIFIED SUPPORTER.
           </p>
         </div>
 
