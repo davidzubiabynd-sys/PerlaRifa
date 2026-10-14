@@ -9,7 +9,7 @@ export const RAFFLE = {
   prizeImage: "/tablet-acer-a11.png",
   whatsapp: "5216622905054",
   instagramUrl: "",
-  publicUrl: "",
+  publicUrl: "https://perlarifa12.vercel.app",
   announcement: "En cuanto se vendan los 200 boletos se anunciará al ganador.",
   purpose: "Gastos hospitalarios de Perla Madrigal",
 };
