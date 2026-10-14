@@ -1,21 +1,24 @@
 # Rifa de Perla Madrigal
 
-Rifa de una tablet Acer A11 como la imagen de referencia, con **200 boletos numerados del 001 al 200**. No se han confirmado las especificaciones exactas del equipo.
+Rifa de una tablet Acer Iconia Tab A11 como la imagen de referencia, con **200 boletos numerados del 001 al 200**. Cada boleto cuesta **$100 MXN**. Se anunciará al ganador en cuanto se vendan los 200 boletos. El motivo es apoyar los gastos hospitalarios de Perla Madrigal.
 
-Incluye selección de boletos, apartados, verificador con comprobantes, panel administrativo en `/admin-rifa`, sorteo de la tablet y flyers descargables de invitación y ganador. Los premios instantáneos de la plantilla permanecen desactivados porque no se han confirmado premios adicionales.
+Incluye selección de boletos, apartados, verificador con comprobantes, panel administrativo en `/admin-rifa`, sorteo de la tablet y flyers descargables de invitación y ganador. No hay boletos de oro ni premios instantáneos; el único premio es la tablet.
 
 ## Datos pendientes
 
-- Precio de cada boleto en MXN.
-- Fecha y hora del sorteo, zona horaria y cierre de ventas.
-- Teléfono/WhatsApp e Instagram de contacto.
-- Banco, titular y CLABE/cuenta para pagos.
+- Instagram de contacto, si se desea incluir.
 - Enlace público donde se desplegará la rifa.
-- Confirmación del modelo Acer A11, capacidad y condiciones de entrega de la tablet.
-- Motivo de la rifa y reglas: cómo se elige al ganador y qué ocurre si no se venden todos los boletos.
+- Capacidad y condiciones de entrega de la tablet.
+- Reglas del sorteo: método para elegir al ganador y qué ocurre si no se completan las ventas.
 - Proyecto independiente de Supabase y acceso administrativo seguro.
 
-El precio permanece vacío y los apartados se habilitan al confirmarlo. La fecha no muestra una cuenta regresiva ficticia. No hay cuentas bancarias ni destinos de contacto de ejemplo activos.
+## Contacto y pago
+
+WhatsApp: **662 290 5054**. Enlace: https://wa.me/5216622905054.
+
+Banco: **BANCOPPEL**. Titular: **Perla Madrigal**. Tarjeta: **4169 1606 2587 5035**. El número se muestra como tarjeta, no como CLABE. Si no puedes transferir, usa el botón de WhatsApp para solicitar ayuda.
+
+Los apartados en línea requieren conectar la nueva base de datos. No hay una fecha fija ni una cuenta regresiva: el anuncio del ganador está condicionado a vender los 200 boletos.
 
 ## Configuración
 
