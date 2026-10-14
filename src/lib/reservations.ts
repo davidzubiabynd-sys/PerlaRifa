@@ -1,3 +1,4 @@
+import { ensureParticipantSession } from "@/lib/auth";
 import { RAFFLE } from "@/lib/raffle";
 // Apartados persistidos directamente en la base de datos con sincronización en vivo.
 // La caché en memoria solo refleja la base y se rehidrata antes de escribir.
@@ -60,6 +61,8 @@ const cache = new Map<string, Reservation>();
 let hydrated = false;
 let hydrationPromise: Promise<void> | null = null;
 let realtimeBound = false;
+let cacheUserId: string | null = null;
+let publicTakenTickets = new Set<number>();
 const LEGACY_MIGRATION_FLAG = "rifa.reservations.supabase-migrated.v2";
 
 function emit() {
@@ -144,64 +147,6 @@ function existsInCache(candidate: Omit<Reservation, "id"> & { id?: string }) {
   );
 }
 
-async function migrateLegacyLocalReservations() {
-  if (typeof window === "undefined") return;
-  if (window.localStorage.getItem(LEGACY_MIGRATION_FLAG)) return;
-
-  const candidates: Array<Omit<Reservation, "id"> & { id?: string }> = [];
-  for (let i = 0; i < window.localStorage.length; i += 1) {
-    const key = window.localStorage.key(i) ?? "";
-    const lowerKey = key.toLowerCase();
-    if (lowerKey.startsWith("sb-") || lowerKey.includes("supabase")) continue;
-    const raw = window.localStorage.getItem(key);
-    if (!raw) continue;
-    if (
-      !lowerKey.includes("rifa") &&
-      !lowerKey.includes("reservation") &&
-      !lowerKey.includes("apart") &&
-      !raw.includes("tickets") &&
-      !raw.includes("ticket_ids")
-    ) {
-      continue;
-    }
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      for (const item of extractLegacyItems(parsed)) {
-        const normalized = normalizeLegacyItem(item);
-        if (normalized && !existsInCache(normalized)) candidates.push(normalized);
-      }
-    } catch {
-      // No era JSON de apartados.
-    }
-  }
-
-  if (candidates.length === 0) {
-    window.localStorage.setItem(LEGACY_MIGRATION_FLAG, "empty");
-    return;
-  }
-
-  for (const candidate of candidates) {
-    if (existsInCache(candidate)) continue;
-    const insertPayload = {
-      ...(candidate.id ? { id: candidate.id } : {}),
-      name: candidate.name,
-      phone: candidate.phone,
-      tickets: candidate.tickets,
-      status: candidate.status ?? "pending",
-      receipt: candidate.receipt ?? null,
-      created_at: new Date(candidate.createdAt).toISOString(),
-    };
-    const { data, error } = await supabase.from("reservations").insert(insertPayload).select(LIGHT_SELECT).single();
-    if (error) {
-      console.error("[reservations] legacy migration failed", error);
-      return;
-    }
-    if (data) upsert(rowToReservation(data as Row));
-  }
-  window.localStorage.setItem(LEGACY_MIGRATION_FLAG, new Date().toISOString());
-  emit();
-}
-
 function bindRealtime() {
   if (realtimeBound || typeof window === "undefined") return;
   realtimeBound = true;
@@ -228,6 +173,11 @@ async function hydrate(): Promise<void> {
   if (hydrated) return;
   if (hydrationPromise) return hydrationPromise;
   hydrationPromise = (async () => {
+    const userId = await ensureParticipantSession();
+    if (cacheUserId !== userId) { cache.clear(); publicTakenTickets.clear(); cacheUserId = userId; }
+    const { data: taken, error: takenError } = await supabase.rpc("get_taken_tickets");
+    if (takenError) throw takenError;
+    publicTakenTickets = new Set((taken ?? []).map(row => row.ticket));
     const { data, error } = await supabase
       .from("reservations")
       .select(LIGHT_SELECT)
@@ -243,12 +193,12 @@ async function hydrate(): Promise<void> {
     }
     cache.clear();
     for (const row of (data ?? []) as Row[]) upsert(rowToReservation(row));
-    await migrateLegacyLocalReservations();
     hydrated = true;
     bindRealtime();
     emit();
   })();
-  return hydrationPromise;
+  try { return await hydrationPromise; }
+  catch (error) { hydrationPromise = null; throw error; }
 }
 
 /** Arranca la hidratación en background. Llamar en montaje de las páginas. */
@@ -281,7 +231,7 @@ export function getAllReservations(): Reservation[] {
 }
 
 export function getTakenTickets(): Set<number> {
-  const set = new Set<number>();
+  const set = new Set<number>(publicTakenTickets);
   for (const r of getActiveReservations()) {
     for (const t of r.tickets) set.add(t);
   }
@@ -433,6 +383,12 @@ export async function getReservationReceipt(id: string): Promise<ReservationRece
     throw error;
   }
   return (data?.receipt as ReservationReceipt | null) ?? null;
+}
+
+/** Clears private cached data when changing administrator/participant sessions. */
+export function clearReservationCache() {
+  cache.clear(); publicTakenTickets.clear(); cacheUserId = null;
+  hydrated = false; hydrationPromise = null;
 }
 
 /** Recarga manual desde la base. */
