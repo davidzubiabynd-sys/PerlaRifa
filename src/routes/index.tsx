@@ -1,3 +1,4 @@
+import { RAFFLE, PRICE_LABEL, amountLabel } from "@/lib/raffle";
 import { Heart } from "lucide-react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
@@ -10,37 +11,29 @@ import {
 
 
 
-import beneficiarioAsset from "@/assets/beneficiario.asset.json";
-import burrititosAsset from "@/assets/burrititos.png.asset.json";
-import pizzeriaAsset from "@/assets/pizzeria-las-lomas.png.asset.json";
-import sonoraAsset from "@/assets/sonora-mi-amor.png.asset.json";
-import chipsAsset from "@/assets/chips-and-sweets.png.asset.json";
-import miniPancakesAsset from "@/assets/mini-pancakes.png.asset.json";
-import deeDeeAsset from "@/assets/dee-dee.png.asset.json";
-import veganaAsset from "@/assets/vegana-del-norte.png.asset.json";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const TOTAL = 1000;
-const PRICE = 100;
-const WHATSAPP = "0000000000000";
+const TOTAL = RAFFLE.totalTickets;
+const PRICE = RAFFLE.ticketPrice ?? 0;
+const WHATSAPP = RAFFLE.whatsapp;
 const WEBHOOK_URL = (import.meta as any).env?.VITE_WEBHOOK_URL ?? "";
-const RAFFLE_DATE = new Date("2026-07-31T20:30:00-07:00");
+const RAFFLE_DATE = RAFFLE.drawDate ? new Date(RAFFLE.drawDate) : null;
 
 function pad(n: number) {
   return n.toString().padStart(3, "0");
 }
 
-function useCountdown(target: Date) {
+function useCountdown(target: Date | null) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  if (now === null) return { d: "--", h: "--", m: "--", s: "--", ready: false } as const;
+  if (now === null || target === null) return { d: "--", h: "--", m: "--", s: "--", ready: false } as const;
   const diff = Math.max(0, target.getTime() - now);
   return {
     d: Math.floor(diff / 86400000),
@@ -80,6 +73,7 @@ function Index() {
   }
 
   useEffect(() => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) return;
     let cancelled = false;
     setReady(false);
     refreshReservations()
@@ -130,6 +124,7 @@ function Index() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (RAFFLE.ticketPrice === null) return alert("El precio del boleto está pendiente. Los apartados abrirán al confirmar el precio.");
     if (!ready) return alert("Espera un momento: estamos sincronizando los boletos apartados.");
     if (selected.size === 0) return alert("Selecciona al menos un boleto.");
     const phoneDigits = normalizePhone(whats);
@@ -221,8 +216,8 @@ function Index() {
     [filtered, ready, taken],
   );
   const orderedNumbers = useMemo(
-    () => [...availableNumbers, ...takenNumbers],
-    [availableNumbers, takenNumbers],
+    () => ready ? [...availableNumbers, ...takenNumbers] : filtered,
+    [availableNumbers, takenNumbers, ready, filtered],
   );
 
   return (
@@ -243,20 +238,20 @@ function Index() {
               className="h-2 w-2 animate-pulse rounded-full"
               style={{ background: "var(--gold)" }}
             />
-            RIFA SOLIDARIA · 100% GARANTIZADA
+            RIFA DE PERLA MADRIGAL · 200 BOLETOS
           </div>
 
           <div className="grid gap-10 md:grid-cols-[1.3fr_1fr] md:items-center">
             <div>
               <h1 className="text-3xl font-extrabold leading-[1.08] text-white sm:text-5xl md:text-6xl">
-                Gran Rifa Solidaria
+                Gana una tablet
                 <br />
-                <span style={{ color: "var(--gold)" }}>en apoyo a Persona beneficiaria</span>
+                <span style={{ color: "var(--gold)" }}>Perla Madrigal</span>
                 <br />
-                <span className="text-white/90">Tu causa</span>
+                <span className="text-white/90">200 boletos disponibles</span>
               </h1>
               <p className="mt-5 max-w-xl text-base font-medium text-white/85 sm:text-lg">
-                Comparte aquí el objetivo de tu rifa 💖
+                Participa por una tablet Acer A11 como la de la imagen. Fecha y precio por confirmar.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -276,12 +271,12 @@ function Index() {
               </div>
 
               <p className="mt-5 text-sm font-medium text-white/70">
-                Apóyanos comprando tu boleto por solo{" "}
-                <span className="font-bold text-white">$100 MXN</span> y forma parte de esta causa. Tu ayuda significa mucho para nosotros.
+                Precio del boleto: {" "}
+                <span className="font-bold text-white">{PRICE_LABEL}</span>. El sorteo contará con 200 boletos.
               </p>
             </div>
 
-            {/* Photo of Persona beneficiaria — replace /public/beneficiario.jpg with the real photo */}
+            {/* Photo of Perla Madrigal — replace /public/beneficiario.jpg with the real photo */}
             <div className="relative mx-auto w-full max-w-[280px] md:max-w-none">
               <div
                 className="absolute -inset-3 rounded-[2rem] opacity-40 blur-2xl"
@@ -292,9 +287,9 @@ function Index() {
                 style={{ borderColor: "var(--gold)" }}
               >
                 <img
-                  src={beneficiarioAsset.url}
-                  alt="Persona beneficiaria"
-                  className="h-full w-full object-cover"
+                  src={RAFFLE.prizeImage}
+                  alt={RAFFLE.prize}
+                  className="h-full w-full object-contain bg-white p-4"
                 />
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 px-4 py-3 text-center"
@@ -303,7 +298,7 @@ function Index() {
                       "linear-gradient(to top, rgba(0,0,0,0.65), transparent)",
                   }}
                 >
-                  <p className="text-sm font-semibold text-white">Persona beneficiaria</p>
+                  <p className="text-sm font-semibold text-white">{RAFFLE.prize}</p>
                 </div>
               </div>
             </div>
@@ -312,9 +307,9 @@ function Index() {
           {/* Countdown */}
           <div className="mt-10 rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur md:p-6">
             <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-              ⏳ Cierra la rifa en
+              {RAFFLE_DATE ? "⏳ Cuenta regresiva para el sorteo" : "📅 Fecha del sorteo pendiente"}
             </p>
-            <div className="grid grid-cols-4 gap-2 sm:gap-4">
+            {RAFFLE_DATE && <div className="grid grid-cols-4 gap-2 sm:gap-4">
               {[
                 { v: d, l: "Días" },
                 { v: h, l: "Horas" },
@@ -333,7 +328,8 @@ function Index() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div>}
+            {!RAFFLE_DATE && <p className="text-center text-sm text-white/80">Anunciaremos la fecha y hora cuando estén confirmadas.</p>}
           </div>
         </div>
       </header>
@@ -342,7 +338,7 @@ function Index() {
       <SocialProof />
 
       {/* ===== BOLETOS DE ORO ===== */}
-      <GoldenTicketsSection onCta={scrollToBoletos} />
+      {/* Los premios instantáneos se activarán únicamente si se confirman. */}
 
       {/* ===== CÓMO FUNCIONA ===== */}
       <section className="px-5 py-14 md:py-20" style={{ background: "var(--cream)" }}>
@@ -363,7 +359,7 @@ function Index() {
             <StepCard
               num={1}
               title="Elige tus boletos"
-              desc="Toca los números que quieras del panel de abajo. Cada boleto cuesta $100 MXN."
+              desc={`Elige entre 001 y 200. ${PRICE_LABEL}.`}
               icon="🎟️"
             />
             <StepCard
@@ -408,7 +404,7 @@ function Index() {
           La causa de esta rifa
         </h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Describe aquí a la persona o causa que apoyas y explica cómo se utilizará lo recaudado.
+          Rifa organizada en nombre de Perla Madrigal. El premio es una tablet Acer A11 como la referencia mostrada. Los detalles del sorteo y su fecha se anunciarán al confirmarse.
         </p>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
           Agradecemos infinitamente tu empatía y apoyo al sumarte a esta causa.
@@ -426,10 +422,10 @@ function Index() {
           </h2>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2">
-            <InfoCard label="🏆 Premio Mayor" value="$7,000 MXN" sub="En efectivo" highlight />
-            <InfoCard label="🎁 Segundo Premio" value="Amazon Echo Show" sub="Asistente inteligente con pantalla" />
-            <InfoCard label="📅 Fecha del sorteo" value="31 de julio de 2026" sub="8:30 PM · Ruleta digital en vivo" />
-            <InfoCard label="⏰ Cierre de ventas" value="31 de julio · 7:00 PM" sub="Cierre definitivo" />
+            <InfoCard label="🏆 Premio" value={RAFFLE.prize} sub="Como la imagen de referencia; especificaciones por confirmar" highlight />
+            <InfoCard label="🎟️ Boletos disponibles" value="200 boletos" sub="Numeración del 001 al 200" />
+            <InfoCard label="📅 Fecha del sorteo" value="Por confirmar" sub="Fecha y hora pendientes" />
+            <InfoCard label="⏰ Cierre de ventas" value="Por confirmar" sub="Se anunciará junto con las condiciones del sorteo" />
           </div>
 
           <div
@@ -440,7 +436,7 @@ function Index() {
               color: "var(--emerald-deep)",
             }}
           >
-            ✅ Sorteo 100% garantizado, independientemente de la cantidad de boletos vendidos.
+            Fecha, precio y condiciones del sorteo pendientes de confirmación.
           </div>
         </div>
       </section>
@@ -461,7 +457,7 @@ function Index() {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Por boleto
             </p>
-            <p className="text-lg font-extrabold text-emerald-deep">$100 MXN</p>
+            <p className="text-lg font-extrabold text-emerald-deep">{PRICE_LABEL}</p>
           </div>
         </div>
 
@@ -481,13 +477,15 @@ function Index() {
           />
         </div>
 
+        {RAFFLE.ticketPrice === null && <p className="mt-5 rounded-xl border border-border bg-card p-4 text-sm">Los 200 boletos se muestran como referencia. Los apartados abrirán al confirmar el precio y conectar la base de datos.</p>}
+
         {/* Scrollable, uniform grid. auto-fill ensures buttons never get cut. */}
         <div
           className="relative mt-6 max-h-[60vh] overflow-y-auto overscroll-contain rounded-3xl border border-border bg-card p-3 shadow-[var(--shadow-card)] sm:p-5"
           style={{ WebkitOverflowScrolling: "touch" }}
-          aria-busy={!ready}
+          aria-busy={!ready && RAFFLE.ticketPrice !== null}
         >
-          {!ready && (
+          {!ready && RAFFLE.ticketPrice !== null && (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-card/85 backdrop-blur-sm">
               <div className="flex items-center gap-3 rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-emerald shadow-[var(--shadow-soft)]">
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-emerald border-t-transparent" />
@@ -502,7 +500,7 @@ function Index() {
             {orderedNumbers.map((n) => {
               const isTaken = taken.has(n);
               const isSel = selected.has(n);
-              const disabled = !ready || isTaken;
+              const disabled = !ready || RAFFLE.ticketPrice === null || isTaken;
               const takenTitle = `Boleto ${pad(n)} · Ya apartado`;
               return (
                 <button
@@ -579,10 +577,10 @@ function Index() {
           <div className="grid gap-10 md:grid-cols-2">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold">
-                ✅ 100% GARANTIZADA
+                200 BOLETOS · TABLET ACER A11
               </p>
               <h3 className="mt-5 text-2xl font-bold leading-tight sm:text-3xl">
-                Tu confianza y apoyo significan todo para nuestra familia.
+                Gracias por participar en la rifa de Perla Madrigal.
               </h3>
             </div>
             <div className="space-y-5 text-sm">
@@ -593,14 +591,14 @@ function Index() {
                 >
                   ¿Tienes alguna duda? Escríbeme
                 </p>
-                <p className="mt-1.5 text-base font-bold">Organizador de ejemplo</p>
+                <p className="mt-1.5 text-base font-bold">Perla Madrigal</p>
                 <a
-                  href="https://instagram.com/tu_usuario"
+                  href={RAFFLE.instagramUrl || undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-white/80 underline-offset-4 hover:underline"
                 >
-                  Instagram: @tu_usuario
+                  Instagram por confirmar
                 </a>
               </div>
               <div>
@@ -611,18 +609,18 @@ function Index() {
                   Mándame un WhatsApp al:
                 </p>
                 <a
-                  href={`https://wa.me/${WHATSAPP}`}
+                  href={WHATSAPP ? `https://wa.me/${WHATSAPP}` : undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-1.5 inline-block text-base font-bold text-white underline-offset-4 hover:underline"
                 >
-                  Configura tu teléfono
+                  WhatsApp por confirmar
                 </a>
               </div>
             </div>
           </div>
           <div className="mt-12 border-t border-white/15 pt-6 text-center text-xs text-white/60">
-            © 2026 Rifa Solidaria por Persona beneficiaria · Sin fines de lucro
+            © 2026 Rifa de Perla Madrigal
           </div>
         </div>
       </footer>
@@ -736,7 +734,7 @@ function FormPanel(props: {
           <div className="rounded-2xl p-5" style={{ background: "var(--cream)" }}>
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-semibold text-muted-foreground">Total a pagar</span>
-              <span className="text-3xl font-extrabold text-emerald-deep">${total} MXN</span>
+              <span className="text-3xl font-extrabold text-emerald-deep">{amountLabel(selected.size)}</span>
             </div>
           </div>
         </div>
@@ -763,11 +761,11 @@ function FormPanel(props: {
           </div>
           <button
             type="submit"
-            disabled={submitting || !ready || selected.size === 0}
+            disabled={RAFFLE.ticketPrice === null || submitting || !ready || selected.size === 0}
             className="w-full rounded-full py-4 text-base font-bold text-primary-foreground shadow-[var(--shadow-soft)] transition-transform hover:scale-[1.01] active:scale-95 disabled:opacity-60"
             style={{ background: "var(--emerald)" }}
           >
-            {!ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : "💚 Apartar mis boletos"}
+            {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : "💚 Apartar mis boletos"}
           </button>
           <p className="rounded-xl border border-amber-300/50 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-900">
             ⏱ Los boletos apartados se liberarán automáticamente si no se registra el pago en un límite de 12 horas.
@@ -840,7 +838,7 @@ function MobileStickyForm(props: React.ComponentProps<typeof FormPanel>) {
           <div className="mb-5 mt-5 rounded-2xl p-4" style={{ background: "var(--cream)" }}>
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-semibold text-muted-foreground">Total a pagar</span>
-              <span className="text-3xl font-extrabold text-emerald-deep">${total} MXN</span>
+              <span className="text-3xl font-extrabold text-emerald-deep">{amountLabel(selected.size)}</span>
             </div>
           </div>
 
@@ -861,11 +859,11 @@ function MobileStickyForm(props: React.ComponentProps<typeof FormPanel>) {
             />
             <button
               type="submit"
-              disabled={submitting || !ready || selected.size === 0}
+              disabled={RAFFLE.ticketPrice === null || submitting || !ready || selected.size === 0}
               className="w-full rounded-full py-4 text-base font-bold text-white shadow-[var(--shadow-soft)] active:scale-95 disabled:opacity-50"
               style={{ background: "var(--emerald)" }}
             >
-              {!ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : `💚 Apartar ${selected.size > 0 ? `${selected.size} boletos` : "boletos"}`}
+              {RAFFLE.ticketPrice === null ? "Apartados pendientes de apertura" : !ready ? "Sincronizando boletos..." : submitting ? "Registrando..." : `💚 Apartar ${selected.size > 0 ? `${selected.size} boletos` : "boletos"}`}
             </button>
             <p className="rounded-xl border border-amber-300/50 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-900">
               ⏱ Se liberarán si no registras el pago en 12 horas.
@@ -904,8 +902,8 @@ function MobileStickyForm(props: React.ComponentProps<typeof FormPanel>) {
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {hasSelection
-                    ? `${selected.size} boleto${selected.size > 1 ? "s" : ""} · $${total} MXN`
-                    : ready ? "Boletos a $100 MXN" : "Sincronizando boletos"}
+                    ? `${selected.size} boleto${selected.size > 1 ? "s" : ""} · ${amountLabel(selected.size)}`
+                    : ready ? PRICE_LABEL : "Sincronizando boletos"}
                 </p>
                 <p className="truncate text-sm font-extrabold text-emerald-deep">
                   {!ready ? "Espera un momento" : hasSelection ? "Listo para apartar" : "Selecciona tus números"}
@@ -1015,6 +1013,7 @@ function SocialProof() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) return;
     let cancelled = false;
     (async () => {
       const { supabase } = await import("@/integrations/supabase/client");
@@ -1080,140 +1079,4 @@ function SocialProof() {
     </div>
   );
 }
-
-// ===== BOLETOS DE ORO =====
-const SPONSORS = [
-  { name: "Patrocinador B", logo: burrititosAsset.url, prize: "Burritos gratis" },
-  { name: "Patrocinador A", logo: pizzeriaAsset.url, prize: "Pizza gratis" },
-  { name: "Patrocinador C", logo: sonoraAsset.url, prize: "Tacos gratis" },
-  { name: "Patrocinador D", logo: chipsAsset.url, prize: "Bebidas gratis" },
-  { name: "Patrocinador E", logo: miniPancakesAsset.url, prize: "Mini pancakes gratis" },
-  { name: "Patrocinador F", logo: deeDeeAsset.url, prize: "Ensalada gratis" },
-  { name: "Patrocinador G", logo: veganaAsset.url, prize: "Platillos gratis" },
-];
-
-
-function GoldenTicketsSection({ onCta }: { onCta: () => void }) {
-  return (
-    <section className="relative overflow-hidden px-5 py-14 md:py-20">
-      {/* Fondo dorado/cálido */}
-      <div
-        className="absolute inset-0 -z-10"
-        style={{
-          background:
-            "linear-gradient(135deg, oklch(0.95 0.06 85) 0%, oklch(0.88 0.12 78) 55%, oklch(0.82 0.15 70) 100%)",
-        }}
-      />
-      <div
-        className="absolute -top-24 -right-24 -z-10 h-72 w-72 rounded-full opacity-40 blur-3xl"
-        style={{ background: "var(--gold)" }}
-      />
-
-      <div className="mx-auto max-w-5xl">
-        {/* Banner de impacto */}
-        <div className="text-center">
-          <span
-            className="inline-flex items-center gap-2 rounded-full border-2 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.18em] shadow-sm"
-            style={{
-              borderColor: "oklch(0.55 0.15 60)",
-              color: "oklch(0.35 0.12 55)",
-              background: "rgba(255,255,255,0.55)",
-            }}
-          >
-            ✨ Bonus Express
-          </span>
-          <h2
-            className="mt-4 text-3xl font-extrabold leading-tight sm:text-5xl"
-            style={{ color: "oklch(0.28 0.09 55)" }}
-          >
-            ¡Compra tu boleto y <span style={{ color: "oklch(0.5 0.19 45)" }}>gana al instante!</span>
-          </h2>
-          <p
-            className="mx-auto mt-4 max-w-2xl text-sm font-medium sm:text-base"
-            style={{ color: "oklch(0.32 0.06 55)" }}
-          >
-            Busca los <strong>Boletos de Oro</strong> escondidos cortesía de nuestros patrocinadores
-            y llévate <strong>premios en comida</strong>. Cualquier número puede ser un Boleto de Oro. 🍔🍕🌮
-          </p>
-          <div
-            className="mx-auto mt-4 flex max-w-2xl items-center gap-3 rounded-2xl border-2 px-4 py-3 text-center text-sm font-semibold sm:text-base"
-            style={{
-              borderColor: "oklch(0.6 0.13 60)",
-              background: "rgba(255,255,255,0.7)",
-              color: "oklch(0.32 0.1 55)",
-            }}
-          >
-            <span className="text-xl">⚡🎁</span>
-            <span>
-              Algunos <strong>Boletos de Oro se sortean al instante</strong> al apartar tu número,
-              y otros premios se <strong>rifan al final</strong> junto con los premios mayores.
-            </span>
-          </div>
-          <div
-            className="mx-auto mt-4 flex max-w-xl items-center gap-3 rounded-2xl border-2 px-4 py-3 text-center text-sm font-semibold sm:text-base"
-            style={{
-              borderColor: "oklch(0.55 0.15 60)",
-              background: "rgba(255,255,255,0.65)",
-              color: "oklch(0.35 0.12 55)",
-            }}
-          >
-            <span className="text-xl">⭐🏆</span>
-            <span>¿Te toca un Boleto de Oro? <strong>Sigues participando</strong> para los grandes premios de $7,000 MXN y el Amazon Echo Show.</span>
-          </div>
-        </div>
-
-        {/* Patrocinadores */}
-        <div className="mt-12">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.22em]" style={{ color: "oklch(0.38 0.09 55)" }}>
-            Nuestros Patrocinadores
-          </p>
-          <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
-            {SPONSORS.map((s) => (
-              <div
-                key={s.name}
-                className="group flex flex-col items-center justify-center rounded-2xl bg-white/80 p-6 shadow-[0_10px_30px_-12px_rgba(120,80,20,0.35)] backdrop-blur transition-transform hover:-translate-y-1 hover:shadow-[0_18px_40px_-14px_rgba(120,80,20,0.5)]"
-              >
-                <div className="flex h-24 w-full items-center justify-center sm:h-28">
-                  <img
-                    src={s.logo}
-                    alt={`Logo de ${s.name}`}
-                    className="max-h-full max-w-[80%] object-contain transition-all duration-300 md:group-hover:grayscale"
-                    loading="lazy"
-                  />
-                </div>
-                <p className="mt-4 text-center text-sm font-bold" style={{ color: "oklch(0.3 0.08 55)" }}>
-                  {s.name}
-                </p>
-                <span
-                  className="mt-1 inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-[11px] font-semibold"
-                  style={{ background: "oklch(0.95 0.08 80)", color: "oklch(0.4 0.12 55)" }}
-                >
-                  🎁 {s.prize}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA secundario */}
-        <div className="mt-10 flex flex-col items-center gap-2 text-center">
-          <p className="text-sm font-medium" style={{ color: "oklch(0.32 0.07 55)" }}>
-            Tu boleto apoya a Persona beneficiaria <strong>y</strong> puede ganarte comida gratis hoy mismo.
-          </p>
-          <button
-            onClick={onCta}
-            className="mt-2 rounded-full px-6 py-3 text-sm font-bold shadow-lg transition-transform hover:scale-[1.03] active:scale-95"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.55 0.17 55), oklch(0.68 0.16 70))",
-              color: "white",
-            }}
-          >
-            🎟️ Buscar mi Boleto de Oro
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 

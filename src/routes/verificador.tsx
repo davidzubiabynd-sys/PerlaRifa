@@ -1,3 +1,4 @@
+import { RAFFLE, amountLabel } from "@/lib/raffle";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/verificador")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
-      { title: "Verificador · Rifa Persona beneficiaria" },
+      { title: "Verificador · Rifa Perla Madrigal" },
       { name: "description", content: "Consulta tus boletos apartados y sube tu comprobante de pago." },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -217,7 +218,7 @@ function ReservationCard({
   const left = timeLeftMs(reservation);
   const hasReceipt = Boolean(reservation.receipt);
   const isPaid = reservation.status === "paid";
-  const total = reservation.tickets.length * 100;
+  const total = reservation.tickets.length * (RAFFLE.ticketPrice ?? 0);
   return (
     <article className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -228,7 +229,7 @@ function ReservationCard({
           <p className="mt-0.5 text-xs font-semibold text-muted-foreground">{reservation.phone}</p>
         </div>
         <div className="shrink-0 rounded-full bg-cream px-3 py-1 text-xs font-extrabold text-emerald-deep">
-          ${total} MXN
+          {amountLabel(reservation.tickets.length)}
         </div>
       </div>
 
@@ -309,6 +310,7 @@ function ReservationCard({
 
 function BankDetailsInline() {
   const account = BANK_ACCOUNTS[0];
+  if (!account) return <p className="rounded-xl border p-4 text-center text-sm">Los datos de pago están pendientes de confirmación.</p>;
   return (
     <section
       className="rounded-2xl border-2 p-4"
@@ -397,7 +399,7 @@ function PaymentModal({
   const [view, setView] = useState<"upload" | "badge">(
     reservation.receipt ? "badge" : "upload",
   );
-  const total = useMemo(() => reservation.tickets.length * 100, [reservation]);
+  const total = useMemo(() => reservation.tickets.length * (RAFFLE.ticketPrice ?? 0), [reservation]);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -435,7 +437,7 @@ function PaymentModal({
             name: reservation.name,
             phone: reservation.phone,
             tickets: reservation.tickets,
-            total_mxn: reservation.tickets.length * 100,
+            total_mxn: RAFFLE.ticketPrice === null ? null : reservation.tickets.length * RAFFLE.ticketPrice,
             receipt: { name: file.name, type: file.type },
             submitted_at: new Date().toISOString(),
           }),
@@ -488,7 +490,7 @@ function PaymentModal({
               {view === "badge" ? "¡Pago recibido!" : "Comprobante de pago"}
             </p>
             <h2 className="mt-1 text-xl font-extrabold text-emerald-deep">
-              {reservation.tickets.length} boleto{reservation.tickets.length === 1 ? "" : "s"} · ${total} MXN
+              {reservation.tickets.length} boleto{reservation.tickets.length === 1 ? "" : "s"} · {amountLabel(reservation.tickets.length)}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {reservation.name || "Sin nombre"} · {reservation.phone}
@@ -629,7 +631,7 @@ function BadgeSection({
           await nav.share({
             files: [file],
             title: "Mi insignia de apoyo",
-            text: "Apoyo la Rifa Solidaria por Persona beneficiaria 💚",
+            text: "Apoyo la Rifa de Perla Madrigal 💚",
           });
           return;
         } catch (shareErr: any) {

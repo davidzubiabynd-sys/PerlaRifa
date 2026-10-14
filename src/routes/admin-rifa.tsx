@@ -1,3 +1,4 @@
+import { RAFFLE, amountLabel } from "@/lib/raffle";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -24,7 +25,7 @@ const AUTH_KEY = "rifa.admin.auth.v1";
 export const Route = createFileRoute("/admin-rifa")({
   head: () => ({
     meta: [
-      { title: "Admin · Rifa Persona beneficiaria" },
+      { title: "Admin · Rifa Perla Madrigal" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -213,7 +214,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
       name: r.name,
       phone: r.phone,
       tickets: r.tickets,
-      total_mxn: r.tickets.length * 100,
+      total_mxn: RAFFLE.ticketPrice === null ? null : r.tickets.length * RAFFLE.ticketPrice,
       status: r.status ?? "pending",
       submitted_at: new Date().toISOString(),
     };

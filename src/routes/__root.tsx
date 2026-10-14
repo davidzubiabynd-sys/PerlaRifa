@@ -34,7 +34,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Rifa Solidaria por Persona beneficiaria" },
-      { name: "description", content: "Apoya a Persona beneficiaria con un boleto de $100 MXN. Premio mayor $7,000. Sorteo 31 de julio 2026." },
-      { property: "og:title", content: "Rifa Solidaria por Persona beneficiaria" },
-      { property: "og:description", content: "Apoya a Persona beneficiaria con un boleto de $100 MXN. Premio mayor $7,000. Sorteo 31 de julio 2026." },
+      { title: "Rifa de Perla Madrigal" },
+      { name: "description", content: "Rifa de Perla Madrigal: 200 boletos para ganar una tablet Acer A11. Fecha y precio por confirmar." },
+      { property: "og:title", content: "Rifa de Perla Madrigal" },
+      { property: "og:description", content: "Rifa de Perla Madrigal: 200 boletos para ganar una tablet Acer A11. Fecha y precio por confirmar." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Rifa Solidaria por Persona beneficiaria" },
-      { name: "twitter:description", content: "Apoya a Persona beneficiaria con un boleto de $100 MXN. Premio mayor $7,000. Sorteo 31 de julio 2026." },
+      { name: "twitter:title", content: "Rifa de Perla Madrigal" },
+      { name: "twitter:description", content: "Rifa de Perla Madrigal: 200 boletos para ganar una tablet Acer A11. Fecha y precio por confirmar." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
